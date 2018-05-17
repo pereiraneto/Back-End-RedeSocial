@@ -6,6 +6,7 @@ let path = require('path');
 // let bandit_routes = require('../app/routes/bandits')
 
 module.exports = function(){
+    //Express
     let app = express();
     app.set('port', 3000);
     app.use(express.static('./public'));
