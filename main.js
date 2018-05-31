@@ -1,5 +1,6 @@
 let http = require('http');
 let config_express = require('./config/express');
+let db = require('./config/database')
 
 let app = config_express();
 http.createServer(app)
@@ -7,3 +8,4 @@ http.createServer(app)
         console.log("Servidor rodando!");
     }
 );
+db('mongodb://localhost:27017/redesocialback');

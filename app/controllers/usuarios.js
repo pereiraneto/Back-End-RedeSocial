@@ -1,40 +1,100 @@
-let usuarios = [
-    {_id: 1, nome:'Pereira', email:'pereira@pereira', senha:'qwe'},
-    {_id: 2, nome:'Neto', email:'neto@neto', senha:'123'},
-    {_id: 3, nome:'Antonio', email:'antonio@antonio', senha:'ant11'}
-]
+let Usuario = require('../models/usuario');
+let Post = require('../models/post');
 
 module.exports.getUsuarios = function(req,res){
-    if(req.query.min_id){
-        let list = usuarios.filter((el)=>(el._id>=req.query.min_id));
-        res.json(list);
-    }else{
-        res.json(usuarios);
+    let promise = Usuario.find().populate('posts').exec();
+
+    if(req.query.nome){
+        let nome = req.query.nome;
+        promise = promise.find({nome : {'$eq':nome}});
     }
+
+    if(req.query.email){
+        let email = req.query.email;
+        promise = promise.find({email : {'$eq':email}});
+    }
+
+    promise.then(
+        function (users) {
+            res.json(users);
+        }
+    ).catch(
+        function(){
+            res.status(404).send('Nao existe');
+        }
+    )
 }
 
 module.exports.getUsuarioById = function(req, res){
     let id = req.params.id;
-    let usuario = usuarios.find((e)=>(e._id==id));
-    if(usuario){
-        res.json(usuario);
-    }else{
-        res.status(404).send('Hostage not found');
-    }
+    let promise = Usuario.findById(id);
+    promise.then(
+        function(user){
+            res.json(user);
+        }
+    ).catch(
+        function(error){
+            res.status(404).send('Nao existe');
+        }
+    )
 }
 
 module.exports.insertUsuario = function(req, res){
-    usuarios.push(req.body);
-    res.status(200).send(req.body);
+    let promise = Usuario.create(req.body);
+    promise.then(
+        function(usuario){
+            res.status(201).json(usuario);
+        }
+    ).catch(
+        function(error){
+            res.status(404).send('Não Existe');
+        }
+    )
 }
 
 module.exports.updateUsuario = function(req, res){
-    
+    let id = req.params.id;
+    let promise = Usuario.findOne({"_id": id}).exec();
+    promise.then(
+        function(user){
+            let promise1 = Usuario.findByIdAndUpdate(id, user);
+            promise1.then(
+                function(usuario){
+                    res.json(usuario);
+                }
+            ).catch(error);
+        }
+    ).catch(error);
 }
 
 module.exports.deleteUsuario = function(req, res){
-    
+    let id = req.params.id;
+    let promise = Usuario.remove({"_id": id});
+    promise.then(
+        function(users){
+            res.json(users);
+        }
+    ).catch(
+        function(error){
+            res.status(404).send('Não Encontrado');
+        }
+    )
 }
 
 module.exports.getAllPostById = function(req, res){
+    let id = req.params.id;
+    let promise = Usuario.findById(id);
+    function error(req, res){
+        res.status(500).send();
+    }
+    promise.then(
+        function(usuario){      
+            let promise1 = Post.find({'uid': usuario._id});
+            promise1.then(
+                function(posts){
+                    res.json(posts);
+                }
+            ).catch(error);
+        }
+    ).catch(error);
 }
