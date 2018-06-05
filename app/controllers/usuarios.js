@@ -1,3 +1,4 @@
+let bcrypt = require('bcrypt');
 let Usuario = require('../models/usuario');
 let Post = require('../models/post');
 
@@ -40,13 +41,22 @@ module.exports.getUsuarioById = function(req, res){
 }
 
 module.exports.insertUsuario = function(req, res){
-    let promise = Usuario.create(req.body);
+    console.log('entrou');
+    let usuario = new Usuario({
+        nome: req.body.nome,
+        email: req.body.email,
+        senha: bcrypt.hashSync(req.body.senha, 10)
+    });
+    console.log('bcrypt');
+    let promise = Usuario.create(usuario);
     promise.then(
         function(usuario){
+            console.log('sucesso');
             res.status(201).json(usuario);
         }
     ).catch(
         function(error){
+            console.log('erro');
             res.status(404).send('Não Existe');
         }
     )
@@ -54,17 +64,21 @@ module.exports.insertUsuario = function(req, res){
 
 module.exports.updateUsuario = function(req, res){
     let id = req.params.id;
-    let promise = Usuario.findOne({"_id": id}).exec();
+    let usuario = new Usuario({
+        nome: req.body.nome,
+        email: req.body.email,
+        senha: bcrypt.hashSync(req.body.senha, 10)
+    });
+    let promise = Usuario.findByIdAndUpdate(id, usuario);
     promise.then(
-        function(user){
-            let promise1 = Usuario.findByIdAndUpdate(id, user);
-            promise1.then(
-                function(usuario){
-                    res.json(usuario);
-                }
-            ).catch(error);
+        function(user){ 
+            res.json(user);
         }
-    ).catch(error);
+    ).catch(
+        function(error){
+            res.status(404).send('Não Encontrado');
+        }
+    );
 }
 
 module.exports.deleteUsuario = function(req, res){

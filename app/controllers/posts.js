@@ -4,6 +4,9 @@ let Post = require('../models/post');
 module.exports.getPosts = function(req,res){
     let promise = Post.find().populate('usuarios').exec();
 
+    let payload = jwt.decode(req.query.token);    
+    promise = promise.find({'usuario': payload.id});
+
     promise.then(
         function (posts) {
             res.json(posts);
@@ -44,17 +47,21 @@ module.exports.insertPost = function(req, res){
 
 module.exports.updatePost = function(req, res){
     let id = req.params.id;
-    let promise = Post.findOne({"_id": id}).exec();
+    let post = new Post({
+        texto: req.body.texto,
+        likes: req.body.likes,
+        uid: req.body.uid
+    });
+    let promise = Post.findByIdAndUpdate(id, post);
     promise.then(
-        function(post){
-            let promise1 = Post.findByIdAndUpdate(id, post);
-            promise1.then(
-                function(post){
-                    res.json(post);
-                }
-            ).catch(error);
+        function(post1){ 
+            res.json(post1);
         }
-    ).catch(error);
+    ).catch(
+        function(error){
+            res.status(404).send('Não Encontrado');
+        }
+    );
 }
 
 module.exports.deletePost = function(req, res){
